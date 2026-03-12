@@ -1,29 +1,59 @@
-DEVELOPER INSTRUCTIONS:
-=======================
+The Little Host for [`libdns`](https://github.com/libdns/libdns)
+==================================================================
 
-This repo is a template for developers to use when creating new [libdns](https://github.com/libdns/libdns) provider implementations.
+[![Go Reference](https://pkg.go.dev/badge/github.com/libdns/thelittlehost.svg)](https://pkg.go.dev/github.com/libdns/thelittlehost)
 
-Be sure to update:
+This package implements the [libdns interfaces](https://github.com/libdns/libdns) for [The Little Host](https://thelittlehost.com), allowing you to manage DNS records programmatically.
 
-- The package name
-- The Go module name in go.mod
-- The latest `libdns/libdns` version in go.mod
-- All comments and documentation, including README below and godocs
-- License (must be compatible with Apache/MIT)
-- All "TODO:"s is in the code
-- All methods that currently do nothing
+## Configuration
 
-**Please be sure to conform to the semantics described at the [libdns godoc](https://github.com/libdns/libdns).**
+```go
+provider := &thelittlehost.Provider{
+    APIToken: "tlh_your_api_token_here",
+}
+```
 
-_Remove this section from the readme before publishing._
+### Fields
 
----
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `APIToken` | `string` | **Yes** | Bearer token for API authentication. Generate one in the The Little Host control panel. Tokens are prefixed with `tlh_`. |
 
-\<PROVIDER NAME\> for [`libdns`](https://github.com/libdns/libdns)
-=======================
+### Environment variables
 
-[![Go Reference](https://pkg.go.dev/badge/test.svg)](https://pkg.go.dev/github.com/libdns/TODO:PROVIDER_NAME)
+This package does not read environment variables directly. Set struct fields explicitly, or use environment variables as defaults in your application:
 
-This package implements the [libdns interfaces](https://github.com/libdns/libdns) for \<PROVIDER\>, allowing you to manage DNS records.
+```go
+provider := &thelittlehost.Provider{
+    APIToken: os.Getenv("THELITTLEHOST_API_TOKEN"),
+}
+```
 
-TODO: Show how to configure and use. Explain any caveats.
+## Usage with CertMagic / Caddy
+
+```go
+import "github.com/libdns/thelittlehost"
+
+provider := &thelittlehost.Provider{
+    APIToken: "tlh_...",
+}
+```
+
+In Caddy JSON config:
+
+```json
+{
+  "module": "thelittlehost",
+  "api_token": "tlh_..."
+}
+```
+
+## Caveats
+
+- **MX records**: Priority is encoded in the `Data` field as `"<preference> <target>"` per the libdns convention and is split out for the API automatically.
+- **DeleteRecords wildcards**: Empty `Type`, `TTL`, or `Data` fields on an input record act as wildcards — any existing record matching the non-empty fields will be deleted.
+- **Concurrency**: All methods are safe for concurrent use.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
